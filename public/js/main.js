@@ -11,6 +11,10 @@ require(
   [
   'require',
   'physicsjs',
+
+  // custom modules
+  'js/player',
+  'js/player-behavior',
   
   // official modules
   'physicsjs/renderers/canvas',
@@ -70,12 +74,14 @@ require(
   
   var init = function init( world, Physics ){
   
-    var ship = Physics.body('circle', {
+    var ship = Physics.body('player', {
       x: 400,
       y: 100,
       vx: 0.08,
       radius: 30
     });
+
+    var playerBehavior = Physics.behavior('player-behavior', {player: ship});
     
     // bodies
     var planet = Physics.body('circle', {
@@ -91,12 +97,20 @@ require(
     
     // render on every step
     world.subscribe('step', function(){
+      // middle of canvas
+      var middle = {
+        x: 0.5 * par.innerWidth,
+        y: 0.5 * par.innerHeight
+      };
+      // follow player
+      renderer.options.offset.clone(middle).vsub(ship.state.pos);
       world.render();
     });
     
     // add things to the world
     world.add([
       ship,
+      playerBehavior,
       planet,
       Physics.behavior('newtonian', { strength: 1e-4 }),
       Physics.behavior('sweep-prune'),
