@@ -80,7 +80,7 @@ define(
 
           // point the acceleration in the direction of the ship's nose
           var v = scratch.vector().set(
-            amount * Math.cos(angel),
+            amount * Math.cos(angle),
             amount * Math.sin(angle)
           );
 
@@ -144,7 +144,7 @@ define(
           }
 
           var scratch = Physics.scratchpad()
-            , rnd = cratch.vector()
+            , rnd = scratch.vector()
             , pos = this.state.pos
             , n = 40 // create 40 pieces of debris
             , r = 2 * this.geometry.radius // diameter
@@ -164,12 +164,12 @@ define(
                 x: pos.get(0) + rnd.get(0),
                 y: pos.get(1) + rnd.get(1),
                 // velocity of debris is same as player
-                vx: this.state.vel.get(0)
-                vy: this.state.vel.get(1)
+                vx: this.state.vel.get(0),
+                vy: this.state.vel.get(1),
                 // set a random angular velocity for a dramatic effect
                 angularVelocity: (Math.random() - 0.5) * 0.06,
                 mass: mass,
-                vertices: verts
+                vertices: verts,
                 // not tooo bouncy
                 restitution: 0.8
               });
