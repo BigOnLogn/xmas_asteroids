@@ -15,6 +15,7 @@ require(
   // custom modules
   'js/player',
   'js/player-behavior',
+  'js/ufo',
   
   // official modules
   'physicsjs/renderers/canvas',
@@ -94,6 +95,52 @@ require(
     });
     planet.view = new Image();
     planet.view.src = require.toUrl('images/planet.png');
+
+    var ufos = [];
+    for (var i = 0, l = 30; i < l; ++i) {
+      var ang = 4 * (Math.random() -0.5) * Math.PI;
+      var r = 700 + 100 * Math.random() - i * 10;
+
+      ufos.push(Physics.body('ufo', {
+        x: 400 + Math.cos(ang) * r,
+        y: 300 + Math.sin(ang) * r,
+        vx: 0.03 * Math.sin(ang),
+        vy: -0.03 * Math.cos(ang),
+        angularVelocity: (Math.random() - 0.5) * 0.001,
+        radius: 50,
+        mas: 30,
+        restitution: 0.6
+      }));
+    }
+
+    // count number of ufos destroyed
+    var killCount = 0;
+    world.subscribe('blow-up', function(data) {
+      killCount++;
+      if (killCount === ufos.length) {
+        world.publish('win-game');
+      }
+    });
+
+    // blow up anything that touches a laser pulse
+    world.subscribe('collisions:detected', function(data) {
+      var collisions = data.collisions
+        , col;
+
+      for (var i = 0, l = collisions.length; i < l; ++i) {
+        col = collisions[i];
+
+        if (col.bodyA.gameType === 'laser' || col.bodyB.gameType === 'laser') {
+          if (col.bodyA.blowUp) {
+            col.bodyA.blowUp();
+          } else if (col.bodyB.blowUp) {
+            col.bodyB.blowUp();
+          }
+
+          return;
+        }
+      }
+    });
     
     // render on every step
     world.subscribe('step', function(){
@@ -105,6 +152,39 @@ require(
       // follow player
       renderer.options.offset.clone(middle).vsub(ship.state.pos);
       world.render();
+    });
+
+    // draw mini-map
+    world.subscribe('render', function(data) {
+      // radius of the mini-map
+      var r = 100;
+      // padding
+      var shim = 15
+      // x,y of center
+      var x = renderer.options.width - r - shim;
+      var y = r + shim;
+      // the ever-useful scratchpad to speed up vector math
+      var scratch = Physics.scratchpad();
+      var d = scratch.vector();
+      var lightness;
+
+      // draw the radar guides
+      renderer.drawCircle(x, y, r, { strokeStyle: '#090', fillStyle: '#010' });
+      renderer.drawCircle(x, y, r * 2/3, {strokeStyle: '#090'});
+      renderer.drawCircle(x, y, r / 3, { strokeStyle: '#090'});
+
+      for (var i = 0, l = data.bodies.length, b = data.bodies[i]; b = data.bodies[i]; i++) {
+        // get the displacement of the body from the ship and scale it
+        d.clone(ship.state.pos).vsub(b.state.pos).mult(-0.05);
+        // color the dot based on how massive the body is
+        lightness = Math.max(Math.min(Math.sqrt(b.mass*10)|0, 100), 10);
+        // if it's inside the mini-map radius
+        if (d.norm() < r) {
+          // draw the dot
+          renderer.drawCircle(x + d.get(0), y + d.get(1), 1, 'hsl(60, 100%, '+lightness+'%)');
+        }
+      }
+      scratch.done();
     });
     
     // add things to the world
@@ -118,6 +198,7 @@ require(
       Physics.behavior('body-impulse-response'),
       renderer
     ]);
+    world.add(ufos);
   };
   
   var world = null;
