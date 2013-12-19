@@ -6,13 +6,15 @@ define(
   ],
 
   function(require, Physics) {
-    return Physics.body('ufo', 'circle', function(parent) {
+    return Physics.body('gift', 'circle', function(parent) {
       var ast1 = new Image();
       ast1.src = require.toUrl('images/gift.png');
 
       return {
         init: function(options) {
           parent.init.call(this, options);
+
+          this.url = options.url;
 
           this.view = ast1;
         },
@@ -56,6 +58,8 @@ define(
             }
             debris = undefined;
           }, 1000);
+
+          window.open(this.url);
 
           world.add(debris);
           world.removeBody(this);

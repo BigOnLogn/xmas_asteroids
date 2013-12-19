@@ -6,16 +6,22 @@ require(
       name: 'physicsjs',
       location: '/js/physicsjs',
       main: 'physicsjs-0.5.3.min'
+    },
+    {
+      name: 'jquery',
+      location: '/js/jquery',
+      main: 'jquery-1.10.1.min'
     }]
   },
   [
   'require',
   'physicsjs',
+  'jquery',
 
   // custom modules
   'js/player',
   'js/player-behavior',
-  'js/ufo',
+  'js/gift',
   
   // official modules
   'physicsjs/renderers/canvas',
@@ -27,7 +33,8 @@ require(
   'physicsjs/behaviors/body-impulse-response'
 ], function(
   require,
-  Physics
+  Physics,
+  $
 ){
   document.body.className = 'before-game';
     var par = parent;
@@ -39,7 +46,7 @@ require(
   var inGame = false;
   document.addEventListener('keydown', function( e ){
     
-    if (!inGame && e.keyCode === 90){
+    if (!inGame && e.keyCode === 90){ // press 'z'
       document.body.className = 'in-game';
       inGame = true;
       newGame();
@@ -97,21 +104,6 @@ require(
     planet.view.src = require.toUrl('images/planet.png');
 
     var ufos = [];
-    for (var i = 0, l = 30; i < l; ++i) {
-      var ang = 4 * (Math.random() -0.5) * Math.PI;
-      var r = 700 + 100 * Math.random() - i * 10;
-
-      ufos.push(Physics.body('ufo', {
-        x: 400 + Math.cos(ang) * r,
-        y: 300 + Math.sin(ang) * r,
-        vx: 0.03 * Math.sin(ang),
-        vy: -0.03 * Math.cos(ang),
-        angularVelocity: (Math.random() - 0.5) * 0.001,
-        radius: 50,
-        mas: 30,
-        restitution: 0.6
-      }));
-    }
 
     // count number of ufos destroyed
     var killCount = 0;
@@ -198,7 +190,32 @@ require(
       Physics.behavior('body-impulse-response'),
       renderer
     ]);
-    world.add(ufos);
+    $.ajax({
+      method: 'GET',
+      url: '/gifts',
+      success: function(gifts) {
+
+        gifts.forEach(function(gift, i) {
+          var ang = 4 * (Math.random() -0.5) * Math.PI;
+          var r = 700 + 100 * Math.random() - i * 10;
+
+          ufos.push(Physics.body('gift', {
+            x: 400 + Math.cos(ang) * r,
+            y: 300 + Math.sin(ang) * r,
+            vx: 0.03 * Math.sin(ang),
+            vy: -0.03 * Math.cos(ang),
+            angularVelocity: (Math.random() - 0.5) * 0.001,
+            radius: 50,
+            mas: 30,
+            restitution: 0.6,
+            url: '/gift/' + gift.id
+          }));
+        });
+        if (ufos.length) {
+          world.add(ufos);
+        }
+      }
+    });
   };
   
   var world = null;
