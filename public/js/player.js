@@ -76,7 +76,7 @@ define(
           var scratch = Physics.scratchpad();
 
           // scale the amount to something not so crazy
-          amount *= 0.00001;
+          amount *= 0.00005;
 
           // point the acceleration in the direction of the ship's nose
           var v = scratch.vector().set(

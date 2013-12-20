@@ -43,13 +43,18 @@ require(
     } catch( e ){
       par = window;
     }
-  var inGame = false;
+  var inGame = false
+    , killCount = 0
+    , ufos = [];
   document.addEventListener('keydown', function( e ){
     
     if (!inGame && e.keyCode === 90){ // press 'z'
       document.body.className = 'in-game';
       inGame = true;
       newGame();
+    } else if (world.isPaused && killCount !== ufos.length) {
+      document.body.className = 'in-game';
+      world.unpause();
     }
   });
   
@@ -103,14 +108,21 @@ require(
     planet.view = new Image();
     planet.view.src = require.toUrl('images/planet.png');
 
-    var ufos = [];
+    ufos = [];
 
     // count number of ufos destroyed
-    var killCount = 0;
+    killCount = 0;
     world.subscribe('blow-up', function(data) {
       killCount++;
       if (killCount === ufos.length) {
         world.publish('win-game');
+        window.open(data.body.url);
+      } else {
+        setTimeout(function() {
+          world.pause();
+          document.body.className = 'paused';
+          window.open(data.body.url);
+        }, 1000);
       }
     });
 

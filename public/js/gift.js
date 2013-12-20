@@ -59,8 +59,6 @@ define(
             debris = undefined;
           }, 1000);
 
-          window.open(this.url);
-
           world.add(debris);
           world.removeBody(this);
           scratch.done();
